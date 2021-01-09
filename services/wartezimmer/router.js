@@ -9,6 +9,26 @@ router.get('/', wartezimmerListe);
 router.post('/', personHinzufuegen);
 router.delete('/next', personLoeschen);
 
+router.get('/lock', lockStatus);
+router.put('/lock', changeLock);
+
+let lock = false;
+
+function lockStatus(req, res) {
+    res.json(lock);
+}
+
+function changeLock(req, res) {
+    /* { "lock": ... } true/false */
+    let new_lock = req.body.lock;
+    if (new_lock === lock) {    // geht nicht
+        res.status(409).json("Lock bereits in angefordertem Status");
+    } else {
+        lock = new_lock;
+        res.status(200).end();
+    }
+}
+
 
 // bei GET wird einfach die gesamte Liste ausgegeben
 function wartezimmerListe(req, res) {
