@@ -9,14 +9,16 @@ async function kunde(kundenId) {
     kundenId = "kunde-" + kundenId;
     console.log("Meine Kunden-ID ist " + kundenId);
 
-    let response = await axios.put(hostUrl + '/wartezimmer/lock', {lock: true});
-    if (response.status !== 200) {
-        console.log(response.data);
-        return;
+    while (true) {
+        let response = await axios.put(hostUrl + '/wartezimmer/lock', {lock: true});
+        if (response.status === 200) {
+            break;
+        }
+        await util.sleep(500);  // 500ms warten
     }
 
     // Anschauen was der Friseur macht
-    response = await axios.get(hostUrl + '/friseur');
+    let response = await axios.get(hostUrl + '/friseur');
     // -Ausgabe des Friseurs
     let friseur = response.data;
     console.log(kundenId +
