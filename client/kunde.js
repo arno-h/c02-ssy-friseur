@@ -44,7 +44,7 @@ kunde(1234).then();
 // Mehrere Kunden
 async function vieleKunden() {
     const anzahl = 10;
-    const wartezeitZwischenNeuenKunden = 50;
+    const wartezeitZwischenNeuenKunden = 53;
 
     for (let kundenId=1; kundenId <= anzahl; kundenId++) {
         kunde(kundenId).then(); // nicht auf Ergebnis mit "await" warten => starten parallel
@@ -53,4 +53,4 @@ async function vieleKunden() {
 }
 
 // Zum Starten:
-// vieleKunden().then();
+vieleKunden().then();

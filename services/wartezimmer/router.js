@@ -40,7 +40,7 @@ function wartezimmerListe(req, res) {
 
 async function personHinzufuegen(req, res) {
     // Die Antwort wird um 10ms verzögert (zu Demozwecken)
-    await util.sleep(10);
+    await util.sleep(17);
     wartezimmer.push(req.body.kundenId);
     console.log("Wartezimmer ADD: " + req.body.kundenId);
     res.status(200).end();

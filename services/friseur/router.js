@@ -5,7 +5,7 @@ const FriseurStatus = require('./status');
 const util = require('../../src/util');
 const router = express.Router();
 
-const dauerHaareSchneiden = 20; // Zeit in ms
+const dauerHaareSchneiden = 41; // Zeit in ms
 
 // Im Friseur-Objekt merken wir uns den Status des Friseurs
 // und (falls gerade vorhanden) welcher Kunde gerade bearbeitet wird.
@@ -38,6 +38,10 @@ function aktualisiereFriseur(req, res) {
 
 async function haareFertigGeschnitten() {
     console.log("Fertig! ... und ab mit dir " + friseur.kunde);
+
+    await util.aquireLock();
+
+    // Erst nach Lock internen Status umstellen
     friseur.kunde = null;
 
     // Schauen wir im Wartezimmer nach, ob jemand da ist
@@ -48,6 +52,7 @@ async function haareFertigGeschnitten() {
         // Niemand da --> Friseur legt sich schlafen
         friseur.status = FriseurStatus.schlafend;
         console.log("Niemand da - ich lege mich schlafen.");
+        await util.freeLock();
         return;
     }
 
@@ -55,6 +60,8 @@ async function haareFertigGeschnitten() {
     resp = await axios.delete('http://127.0.0.1:3000/wartezimmer/next');
     friseur.kunde = resp.data.kundenId;
     console.log('Neuen Kunden gefunden: ' + friseur.kunde);
+    await util.freeLock();
+
     // nach einiger Zeit geht es wieder von vorne los
     setTimeout(haareFertigGeschnitten, dauerHaareSchneiden);
 }
