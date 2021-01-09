@@ -1,57 +1,51 @@
-const Request = require('request');
+const Axios = require('axios');
+const axios = Axios.create({validateStatus: null});
+const util = require('../src/util');
 const FriseurStatus = require('../routes/friseur').FriseurStatus;
 
 const hostUrl = "http://127.0.0.1:3000";
 
-// Wir erzeugen eine zufällige Kunden-ID bzw. holen uns die aus der Kommandozeile
-let kundenId = process.argv.length < 3 ? 'kunde-' + Math.round(Math.random() * 5000) : process.argv[2];
+async function kunde(kundenId) {
+    kundenId = "kunde-" + kundenId;
+    console.log("Meine Kunden-ID ist " + kundenId);
 
-console.log("Meine Kunden-ID ist " + kundenId);
-
-// Wir schauen uns an, was der Friseur macht
-Request.get({
-    url: hostUrl + '/friseur',
-    json: true  // damit signalisieren wir, dass die Antwort automatisch als JSON interpretiert werden soll.
-}, friseurAntwort);
-
-
-function friseurAntwort(error, response, body) {
-    if (error) {
-        throw error;
-    }
-    // DEBUG-Ausgabe des Friseurs
-    console.log(body);
-    let friseur = body;
+    // Anschauen was der Friseur macht
+    let response = await axios.get(hostUrl + '/friseur');
+    // -Ausgabe des Friseurs
+    let friseur = response.data;
+    console.log(kundenId +
+                ": Friseur angetroffen im Status: " + friseur.status +
+                " mit Kunde " + friseur.kunde);
 
     if (friseur.status === FriseurStatus.schlafend) {
-        friseurAufwecken(friseur);
-    } else if (friseur.status === FriseurStatus.schneidend) {
-        setTimeout(insWartezimmerGehen, 200);   // wir gehen erst nach 200ms ins Wartezimmer
-    } else {
-        throw (new Error("unbekannter Friseur-Status"));
+        // Friseur aufwecken
+        response = await axios.post(hostUrl + '/friseur/neuerKunde', {kundenId: kundenId});
+        // zur Nachverfolgung die Antwort des Friseurs ausgeben
+        console.log(kundenId + ": Antwort auf Aufwecken: " + response.data);
+    }
+    else {
+        // ins Wartezimmer gehen
+        await util.sleep(200);  // zu Demozwecken um 200ms verzögern
+        response = await axios.post(hostUrl + '/wartezimmer', {kundenId: kundenId});
+        // zur Nachverfolgung die Antwort des Wartezimmers ausgeben
+        console.log(kundenId + ": Antwort von Wartezimmer: " + response.status);
     }
 }
 
-function friseurAufwecken(friseur) {
-    friseur.status = FriseurStatus.schneidend;
-    friseur.kunde = kundenId;
-    Request.post({
-        url: hostUrl + '/friseur',
-        json: friseur
-    }, logResponse);
+// Basisfall: nur 1 Kunde
+kunde(1234).then();
+
+
+// Mehrere Kunden
+async function vieleKunden() {
+    const anzahl = 10;
+    const wartezeitZwischenNeuenKunden = 50;
+
+    for (let kundenId=1; kundenId <= anzahl; kundenId++) {
+        kunde(kundenId).then(); // nicht auf Ergebnis mit "await" warten => starten parallel
+        await util.sleep(wartezeitZwischenNeuenKunden);
+    }
 }
 
-
-function insWartezimmerGehen() {
-
-    Request.post({
-        url: hostUrl + '/wartezimmer',
-        json: {kundenId: kundenId}
-    }, logResponse);
-}
-
-
-function logResponse(error, response, body) {
-    // nur zur Illustration geben wir die Response aus
-    console.log(body);
-}
+// Zum Starten:
+// vieleKunden().then();

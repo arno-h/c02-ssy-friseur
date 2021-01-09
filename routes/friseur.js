@@ -1,8 +1,11 @@
 const express = require('express');
-const Request = require('request');
+const util = require('../src/util');
+const Axios = require('axios');
+const axios = Axios.create({validateStatus: null});
 const router = express.Router();
 
-let FriseurStatus = {
+
+const FriseurStatus = {
     schlafend: "schlafend",
     schneidend: "schneidend"
 };
@@ -16,9 +19,9 @@ let friseur = {
     kunde: null
 };
 
-/* GET users listing. */
+/* Routen */
 router.get('/', zeigeFriseur);
-router.post('/', aktualisiereFriseur);
+router.post('/neuerKunde', aktualisiereFriseur);
 
 function zeigeFriseur(req, res) {
     res.json(friseur);
@@ -26,7 +29,9 @@ function zeigeFriseur(req, res) {
 
 // Funktion wird genützt, um neue Friseurdaten zu setzen
 function aktualisiereFriseur(req, res) {
-    friseur = req.body;
+    /* { "kundenId": ... } */
+    friseur.status = FriseurStatus.schneidend;
+    friseur.kunde = req.body.kundenId;
 
     console.log("Ich bin " + friseur.status);
     console.log("Schneide Haare bei " + friseur.kunde);
@@ -36,51 +41,28 @@ function aktualisiereFriseur(req, res) {
     res.sendStatus(200);
 }
 
-
-function haareFertigGeschnitten() {
+async function haareFertigGeschnitten() {
     console.log("Fertig! ... und ab mit dir " + friseur.kunde);
     friseur.kunde = null;
 
     // Schauen wir im Wartezimmer nach, ob jemand da ist
-    Request.get({
-        url: 'http://127.0.0.1:3000/wartezimmer',
-        json: true   // wir setzen json-Wert immer, dann "weiß" das Framework, dass wir JSON als Antwort erwarten
-    }, wartezimmerErgebnis);
-}
+    let resp = await axios.get('http://127.0.0.1:3000/wartezimmer/');
+    console.log(resp.data);
 
-
-function wartezimmerErgebnis(error, response, body) {
-    if (error) {
-        throw error;
-    }
-
-    // Aktuelle Liste der Personen im Wartezimmer
-    console.log(body);
-
-    if (body.length == 0) {
+    if (resp.data.number === 0) {
         // Niemand da --> Friseur legt sich schlafen
         friseur.status = FriseurStatus.schlafend;
-    } else {
-        // Jemand im Wartezimmer: Friseur nimmt den nächsten Kunden ran
-        Request.delete({
-            url: 'http://127.0.0.1:3000/wartezimmer/0',
-            json: true
-        }, naechsterKunde);
+        console.log("Niemand da - ich lege mich schlafen.");
+        return;
     }
-}
 
-function naechsterKunde(error, response, body) {
-    if (error) {
-        throw error;
-    }
-    let kunde = body;
-    console.log('Neuen Kunden gefunden: ' + kunde.kundenId);
-
-    friseur.kunde = kunde.kundenId;
-    // nach einiger Zeit geht es weiter bei der Funktion haareFertigGeschnitten
+    // Jemand im Wartezimmer: Friseur nimmt den nächsten Kunden ran
+    resp = await axios.delete('http://127.0.0.1:3000/wartezimmer/next');
+    friseur.kunde = resp.data.kundenId;
+    console.log('Neuen Kunden gefunden: ' + friseur.kunde);
+    // nach einiger Zeit geht es wieder von vorne los
     setTimeout(haareFertigGeschnitten, dauerHaareSchneiden);
 }
-
 
 module.exports = {
     router: router,

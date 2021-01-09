@@ -1,4 +1,5 @@
 const express = require('express');
+const util = require('../src/util');
 const router = express.Router();
 
 // Das Wartezimmer ist eine Liste von Kunden
@@ -6,37 +7,31 @@ let wartezimmer = [];
 
 router.get('/', wartezimmerListe);
 router.post('/', personHinzufuegen);
+router.delete('/next', personLoeschen);
+
 
 // bei GET wird einfach die gesamte Liste ausgegeben
 function wartezimmerListe(req, res) {
-    res.json(wartezimmer);
+    res.json({
+        number: wartezimmer.length,
+        debug_info: wartezimmer.join(', '),
+    });
 }
 
-function personHinzufuegen(req, res) {
-    setTimeout(function() {
-        wartezimmer.push(req.body);
-        res.status(200).end();
-    }, 5);  // Wir verzögern die Antwort um 5ms
+async function personHinzufuegen(req, res) {
+    // Die Antwort wird um 10ms verzögert (zu Demozwecken)
+    await util.sleep(10);
+    wartezimmer.push(req.body.kundenId);
+    console.log("Wartezimmer ADD: " + req.body.kundenId);
+    res.status(200).end();
 }
 
-router.get('/:warteNr', einzelnePersonAnzeigen);
-router.delete('/:warteNr', einzelnePersonLoeschen);
-
-function einzelnePersonAnzeigen(req, res) {
-    let warteNr = req.params.warteNr;
-    console.log("Wartezimmer GET " + warteNr);
-
-    let kunde = wartezimmer[warteNr];
-    res.json(kunde);
-}
-
-function einzelnePersonLoeschen(req, res) {
-    console.log("Wartezimmer DEL " + req.params.warteNr);
-
-    // Wir sind schlampig und löschen immer die erste Person im Array,
-    // egal welche Nummer wir erhalten. Damit funktioniert das Array wie eine Queue.
+function personLoeschen(req, res) {
+    // Es wird immer die erste Person im Array verwendet.
+    // Damit funktioniert das Array wie eine Queue.
     let kunde = wartezimmer.shift();
-    res.json(kunde);
+    console.log("Wartezimmer DEL: " + kunde);
+    res.json({kundenId: kunde});
 }
 
 module.exports = router;
