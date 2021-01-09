@@ -9,8 +9,14 @@ async function kunde(kundenId) {
     kundenId = "kunde-" + kundenId;
     console.log("Meine Kunden-ID ist " + kundenId);
 
+    let response = await axios.put(hostUrl + '/wartezimmer/lock', {lock: true});
+    if (response.status !== 200) {
+        console.log(response.data);
+        return;
+    }
+
     // Anschauen was der Friseur macht
-    let response = await axios.get(hostUrl + '/friseur');
+    response = await axios.get(hostUrl + '/friseur');
     // -Ausgabe des Friseurs
     let friseur = response.data;
     console.log(kundenId +
@@ -30,7 +36,10 @@ async function kunde(kundenId) {
         // zur Nachverfolgung die Antwort des Wartezimmers ausgeben
         console.log(kundenId + ": Antwort von Wartezimmer: " + response.status);
     }
+
+    await axios.put(hostUrl + '/wartezimmer/lock', {lock: false});
 }
+
 
 // Basisfall: nur 1 Kunde
 kunde(1234).then();
