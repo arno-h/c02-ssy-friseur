@@ -1,5 +1,5 @@
 const express = require('express');
-const util = require('../src/util');
+const util = require('../../src/util');
 const router = express.Router();
 
 // Das Wartezimmer ist eine Liste von Kunden

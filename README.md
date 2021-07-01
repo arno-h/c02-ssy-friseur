@@ -4,9 +4,9 @@ Siehe z.B. https://en.wikipedia.org/wiki/Sleeping_barber_problem
 
 ## Services
 
-* routes/friseur.js: schläft, wenn nichts zu tun ist; schneidet sonst Haare 
-  und sieht im Wartezimmer nach neuer Kundschaft
-* routes/wartezimmer.js: im Wesentlichen eine Queue aller wartenden Personen
+* services/friseur/: schläft, wenn nichts zu tun ist;
+  schneidet sonst Haare und sieht im Wartezimmer nach neuer Kundschaft
+* services/wartezimmer/: im Wesentlichen eine Queue aller wartenden Personen
   
 ## Client
 

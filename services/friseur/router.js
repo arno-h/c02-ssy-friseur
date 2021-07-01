@@ -1,14 +1,9 @@
 const express = require('express');
-const util = require('../src/util');
 const Axios = require('axios');
 const axios = Axios.create({validateStatus: null});
+const FriseurStatus = require('./status');
+const util = require('../../src/util');
 const router = express.Router();
-
-
-const FriseurStatus = {
-    schlafend: "schlafend",
-    schneidend: "schneidend"
-};
 
 const dauerHaareSchneiden = 20; // Zeit in ms
 

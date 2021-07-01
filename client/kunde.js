@@ -1,7 +1,7 @@
 const Axios = require('axios');
 const axios = Axios.create({validateStatus: null});
 const util = require('../src/util');
-const FriseurStatus = require('../routes/friseur').FriseurStatus;
+const FriseurStatus = require('../services/friseur/status');
 
 const hostUrl = "http://127.0.0.1:3000";
 

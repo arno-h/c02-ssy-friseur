@@ -8,9 +8,9 @@ app.use(express.json());
 app.use(express.urlencoded({extended: false}));
 
 // Load routes into variables
-const index = require('./routes/index');
-const friseur = require('./routes/friseur').router;
-const wartezimmer = require('./routes/wartezimmer');
+const index = require('./services/index');
+const friseur = require('./services/friseur/router').router;
+const wartezimmer = require('./services/wartezimmer/router');
 
 // Routes
 app.use('/', index);
