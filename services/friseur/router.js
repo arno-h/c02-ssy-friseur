@@ -39,6 +39,13 @@ async function haareFertigGeschnitten() {
     console.log("Fertig! ... und ab mit dir " + friseur.kunde);
     friseur.kunde = null;
 
+    // Testen ob schlafen erlaubt
+    // type coercion -- truthy & falsy values     "" == false, [] == false, 0 == false
+    while (schlafen_gesperrt === true) {
+        // busy-loop verhindern: zwischendurch immer wieder sleep aufrufen
+        await util.sleep(5);
+    }
+
     // Schauen wir im Wartezimmer nach, ob jemand da ist
     console.log("Sehe im Wartezimmer nach");
     let resp = await axios.get('http://127.0.0.1:3000/wartezimmer/');
@@ -57,6 +64,36 @@ async function haareFertigGeschnitten() {
     console.log('Neuen Kunden gefunden: ' + friseur.kunde);
     // nach einiger Zeit geht es wieder von vorne los
     setTimeout(haareFertigGeschnitten, dauerHaareSchneiden);
+}
+
+let schlafen_gesperrt = false;
+
+router.put('/schlaf-lock', putSleepLock);
+/*
+  { "lock":  true/false }
+ */
+function putSleepLock(req, res) {
+    // Four cases we need to handle:
+    // client(PUT)      lock(current)
+    // true             false      << expected case when locking
+    // false            true       << expected case when unlocking
+    // true             true       << try to lock already locked service
+    // false            false      << try to unlock already unlocked service
+
+    if (req.body.lock === true && schlafen_gesperrt === false) {
+        schlafen_gesperrt = true;
+        res.status(200).end();
+    }
+    else if (req.body.lock === false && schlafen_gesperrt === true) {
+        schlafen_gesperrt = false;
+        res.status(200).end();
+    }
+    else if (req.body.lock === true && schlafen_gesperrt === true) {
+        res.status(409).end();  // 409 Conflict
+    }
+    else if (req.body.lock === false && schlafen_gesperrt === false) {
+        res.status(409).end();  // 409 Conflict
+    }
 }
 
 module.exports = router;
