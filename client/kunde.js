@@ -9,6 +9,17 @@ async function kunde(kundenId) {
     kundenId = "kunde-" + kundenId;
     console.log("Meine Kunden-ID ist " + kundenId);
 
+    // Lock aquirieren -- so lange, bis es klappt
+    while (true) {
+        let lock_response = await axios.put(hostUrl + '/friseur/schlaf-lock',
+            {lock: true}
+        );
+        if (lock_response.status === 200)
+            break;
+        // status 409
+        await util.sleep(100);
+    }
+
     // Anschauen was der Friseur macht
     let response = await axios.get(hostUrl + '/friseur');
     // -Ausgabe des Friseurs
@@ -23,27 +34,16 @@ async function kunde(kundenId) {
         // zur Nachverfolgung die Antwort des Friseurs ausgeben
         console.log(kundenId + ": Antwort auf Aufwecken: " + response.data);
     } else {
-        // Lock aquirieren -- so lange, bis es klappt
-        while (true) {
-            let lock_response = await axios.put(hostUrl + '/friseur/schlaf-lock',
-                {lock: true}
-            );
-            if (lock_response.status === 200)
-                break;
-            // status 409
-            await util.sleep(100);
-        }
-
         // ins Wartezimmer gehen
         await util.sleep(200);  // zu Demozwecken um 200ms verzögern
         response = await axios.post(hostUrl + '/wartezimmer', {kundenId: kundenId});
         // zur Nachverfolgung die Antwort des Wartezimmers ausgeben
         console.log(kundenId + ": Antwort von Wartezimmer: " + response.status);
-
-        await axios.put(hostUrl + '/friseur/schlaf-lock',
-            {lock: false}
-        );
     }
+
+    await axios.put(hostUrl + '/friseur/schlaf-lock',
+        {lock: false}
+    );
 }
 
 // Basisfall: nur 1 Kunde
