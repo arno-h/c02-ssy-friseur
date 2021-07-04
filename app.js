@@ -9,7 +9,7 @@ app.use(express.urlencoded({extended: false}));
 
 // Load routes into variables
 const index = require('./services/index');
-const friseur = require('./services/friseur/router').router;
+const friseur = require('./services/friseur/router');
 const wartezimmer = require('./services/wartezimmer/router');
 
 // Routes

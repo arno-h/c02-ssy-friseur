@@ -59,7 +59,4 @@ async function haareFertigGeschnitten() {
     setTimeout(haareFertigGeschnitten, dauerHaareSchneiden);
 }
 
-module.exports = {
-    router: router,
-    FriseurStatus: FriseurStatus
-};
+module.exports = router;
