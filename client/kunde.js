@@ -22,13 +22,27 @@ async function kunde(kundenId) {
         response = await axios.post(hostUrl + '/friseur/neuerKunde', {kundenId: kundenId});
         // zur Nachverfolgung die Antwort des Friseurs ausgeben
         console.log(kundenId + ": Antwort auf Aufwecken: " + response.data);
-    }
-    else {
+    } else {
+        // Lock aquirieren -- so lange, bis es klappt
+        while (true) {
+            let lock_response = await axios.put(hostUrl + '/friseur/schlaf-lock',
+                {lock: true}
+            );
+            if (lock_response.status === 200)
+                break;
+            // status 409
+            await util.sleep(100);
+        }
+
         // ins Wartezimmer gehen
         await util.sleep(200);  // zu Demozwecken um 200ms verzögern
         response = await axios.post(hostUrl + '/wartezimmer', {kundenId: kundenId});
         // zur Nachverfolgung die Antwort des Wartezimmers ausgeben
         console.log(kundenId + ": Antwort von Wartezimmer: " + response.status);
+
+        await axios.put(hostUrl + '/friseur/schlaf-lock',
+            {lock: false}
+        );
     }
 }
 
@@ -41,7 +55,7 @@ async function vieleKunden() {
     const anzahl = 10;
     const wartezeitZwischenNeuenKunden = 30;
 
-    for (let kundenId=1; kundenId <= anzahl; kundenId++) {
+    for (let kundenId = 1; kundenId <= anzahl; kundenId++) {
         kunde(kundenId).then(); // nicht auf Ergebnis mit "await" warten => starten parallel
         await util.sleep(wartezeitZwischenNeuenKunden);
     }
