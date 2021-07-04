@@ -80,19 +80,11 @@ function putSleepLock(req, res) {
     // true             true       << try to lock already locked service
     // false            false      << try to unlock already unlocked service
 
-    if (req.body.lock === true && schlafen_gesperrt === false) {
-        schlafen_gesperrt = true;
-        res.status(200).end();
-    }
-    else if (req.body.lock === false && schlafen_gesperrt === true) {
-        schlafen_gesperrt = false;
-        res.status(200).end();
-    }
-    else if (req.body.lock === true && schlafen_gesperrt === true) {
+    if (req.body.lock === schlafen_gesperrt) {
         res.status(409).end();  // 409 Conflict
-    }
-    else if (req.body.lock === false && schlafen_gesperrt === false) {
-        res.status(409).end();  // 409 Conflict
+    } else {
+        schlafen_gesperrt = req.body.lock;
+        res.status(200).end();
     }
 }
 
