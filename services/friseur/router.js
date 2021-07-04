@@ -28,12 +28,11 @@ function aktualisiereFriseur(req, res) {
     friseur.status = FriseurStatus.schneidend;
     friseur.kunde = req.body.kundenId;
 
-    console.log("Ich bin " + friseur.status);
     console.log("Schneide Haare bei " + friseur.kunde);
 
     // nach einiger Zeit geht es weiter bei der Funktion haareFertigGeschnitten
     setTimeout(haareFertigGeschnitten, dauerHaareSchneiden);
-    res.sendStatus(200);
+    res.status(200).end();
 }
 
 async function haareFertigGeschnitten() {
@@ -41,6 +40,7 @@ async function haareFertigGeschnitten() {
     friseur.kunde = null;
 
     // Schauen wir im Wartezimmer nach, ob jemand da ist
+    console.log("Sehe im Wartezimmer nach");
     let resp = await axios.get('http://127.0.0.1:3000/wartezimmer/');
     console.log(resp.data);
 
